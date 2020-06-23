@@ -49,7 +49,7 @@ func newK8sClient(conf PluginConf) (*kubernetes.Clientset, error) {
 	}
 
 	log.Infof("Set up kubernetes client with kubeconfig %s", kubeconfig)
-	log.Infof("Kubernetes config %v", config)
+	log.Debugf("Kubernetes config %v", config)
 
 	// Create the clientset
 	return kubernetes.NewForConfig(config)
@@ -59,7 +59,7 @@ func newK8sClient(conf PluginConf) (*kubernetes.Clientset, error) {
 func getK8sPodInfo(client *kubernetes.Clientset, podName, podNamespace string) (containers []string,
 	initContainers map[string]struct{}, labels map[string]string, annotations map[string]string, ports []string, err error) {
 	pod, err := client.CoreV1().Pods(podNamespace).Get(podName, metav1.GetOptions{})
-	log.Infof("pod info %+v", pod)
+	log.Debugf("pod info %+v", pod)
 	if err != nil {
 		return nil, nil, nil, nil, nil, err
 	}
