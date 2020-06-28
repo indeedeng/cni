@@ -55,7 +55,7 @@ func (ipt *iptables) Program(netns string, rdrct *Redirect) error {
 		"-x", rdrct.excludeIPCidrs,
 		"-k", rdrct.kubevirtInterfaces,
 	}
-	if rdrct.noLocalOutboundRedirectForProxy == "true" {
+	if rdrct.disableRedirectionOnLocalLoopback == "true" {
 		nsenterArgs = append(nsenterArgs, "-n")
 	}
 	log.Info("nsenter args",

@@ -474,18 +474,18 @@ func TestCmdAddWithKubevirtInterfaces(t *testing.T) {
 func TestCmdAddWithNoLocalOutboundRedirectForProxy(t *testing.T) {
 	defer resetGlobalTestVariables()
 
-	testAnnotations[noLocalOutboundRedirectForProxyKey] = "true"
+	testAnnotations[disableRedirectionOnLocalLoopback] = "true"
 	testContainers = []string{"mockContainer", "mockContainer2"}
 
 	testCmdAdd(t)
 
-	value, ok := testAnnotations[noLocalOutboundRedirectForProxyKey]
+	value, ok := testAnnotations[disableRedirectionOnLocalLoopback]
 	if !ok {
-		t.Fatalf("expected noLocalOutboundRedirectForProxyKey annotation to exist")
+		t.Fatalf("expected disableRedirectionOnLocalLoopback annotation to exist")
 	}
 
-	if value != testAnnotations[noLocalOutboundRedirectForProxyKey] {
-		t.Fatalf(fmt.Sprintf("expected noLocalOutboundRedirectForProxy annotation to equals %s", testAnnotations[noLocalOutboundRedirectForProxyKey]))
+	if value != testAnnotations[disableRedirectionOnLocalLoopback] {
+		t.Fatalf(fmt.Sprintf("expected disableRedirectionOnLocalLoopback annotation to equals %s", testAnnotations[disableRedirectionOnLocalLoopback]))
 	}
 
 	if !nsenterFuncCalled {
@@ -498,8 +498,8 @@ func TestCmdAddWithNoLocalOutboundRedirectForProxy(t *testing.T) {
 	}
 
 	r := mockIntercept.lastRedirect[len(mockIntercept.lastRedirect)-1]
-	if r.noLocalOutboundRedirectForProxy != testAnnotations[noLocalOutboundRedirectForProxyKey] {
-		t.Fatalf("expect noLocalOutboundRedirectForProxy is \"true\", actual %v", r.noLocalOutboundRedirectForProxy)
+	if r.disableRedirectionOnLocalLoopback != testAnnotations[disableRedirectionOnLocalLoopback] {
+		t.Fatalf("expect disableRedirectionOnLocalLoopback is \"true\", actual %v", r.disableRedirectionOnLocalLoopback)
 	}
 }
 

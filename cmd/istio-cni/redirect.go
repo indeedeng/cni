@@ -41,16 +41,16 @@ const (
 )
 
 var (
-	includeIPCidrsKey      = annotation.SidecarTrafficIncludeOutboundIPRanges.Name
-	excludeIPCidrsKey      = annotation.SidecarTrafficExcludeOutboundIPRanges.Name
-	includePortsKey        = annotation.SidecarTrafficIncludeInboundPorts.Name
-	excludeInboundPortsKey = annotation.SidecarTrafficExcludeInboundPorts.Name
+	includeIPCidrsKey       = annotation.SidecarTrafficIncludeOutboundIPRanges.Name
+	excludeIPCidrsKey       = annotation.SidecarTrafficExcludeOutboundIPRanges.Name
+	includePortsKey         = annotation.SidecarTrafficIncludeInboundPorts.Name
+	excludeInboundPortsKey  = annotation.SidecarTrafficExcludeInboundPorts.Name
+	excludeOutboundPortsKey = annotation.SidecarTrafficExcludeOutboundPorts.Name
 	// TODO: add this to the istio-api repo.
-	targetPortKey                      = "traffic.sidecar.istio.io/targetPort"
-	noRedirectUIDKey                   = "traffic.sidecar.istio.io/noRedirectUID"
-	includeOutboundPortsKey            = "traffic.sidecar.istio.io/includeOutboundPorts"
-	noLocalOutboundRedirectForProxyKey = "traffic.sidecar.istio.io/noLocalOutboundRedirectForProxy"
-	excludeOutboundPortsKey            = annotation.SidecarTrafficExcludeOutboundPorts.Name
+	targetPortKey                     = "traffic.sidecar.istio.io/targetPort"
+	noRedirectUIDKey                  = "traffic.sidecar.istio.io/noRedirectUID"
+	includeOutboundPortsKey           = "traffic.sidecar.istio.io/includeOutboundPorts"
+	disableRedirectionOnLocalLoopback = "traffic.sidecar.istio.io/disableRedirectionOnLocalLoopback"
 
 	sidecarInterceptModeKey = annotation.SidecarInterceptionMode.Name
 	sidecarPortListKey      = annotation.SidecarStatusPort.Name
@@ -58,36 +58,36 @@ var (
 	kubevirtInterfacesKey = annotation.SidecarTrafficKubevirtInterfaces.Name
 
 	annotationRegistry = map[string]*annotationParam{
-		"targetPort":                      {targetPortKey, defaultRedirectToPort, validatePort},
-		"noRedirectUID":                   {noRedirectUIDKey, defaultNoRedirectUID, alwaysValidFunc},
-		"inject":                          {injectAnnotationKey, "", alwaysValidFunc},
-		"status":                          {sidecarStatusKey, "", alwaysValidFunc},
-		"redirectMode":                    {sidecarInterceptModeKey, defaultRedirectMode, validateInterceptionMode},
-		"ports":                           {sidecarPortListKey, "", validatePortList},
-		"includeIPCidrs":                  {includeIPCidrsKey, defaultRedirectIPCidr, validateCIDRListWithWildcard},
-		"excludeIPCidrs":                  {excludeIPCidrsKey, defaultRedirectExcludeIPCidr, validateCIDRList},
-		"includePorts":                    {includePortsKey, "", validatePortListWithWildcard},
-		"excludeInboundPorts":             {excludeInboundPortsKey, defaultRedirectExcludePort, validatePortList},
-		"includeOutboundPorts":            {includeOutboundPortsKey, defaultRedirectIncludePort, validatePortListWithWildcard},
-		"excludeOutboundPorts":            {excludeOutboundPortsKey, defaultRedirectExcludePort, validatePortList},
-		"kubevirtInterfaces":              {kubevirtInterfacesKey, defaultKubevirtInterfaces, alwaysValidFunc},
-		"noLocalOutboundRedirectForProxy": {noLocalOutboundRedirectForProxyKey, defaultNoLocalOutboundRedirectForProxy, validateBoolean},
+		"targetPort":                        {targetPortKey, defaultRedirectToPort, validatePort},
+		"noRedirectUID":                     {noRedirectUIDKey, defaultNoRedirectUID, alwaysValidFunc},
+		"inject":                            {injectAnnotationKey, "", alwaysValidFunc},
+		"status":                            {sidecarStatusKey, "", alwaysValidFunc},
+		"redirectMode":                      {sidecarInterceptModeKey, defaultRedirectMode, validateInterceptionMode},
+		"ports":                             {sidecarPortListKey, "", validatePortList},
+		"includeIPCidrs":                    {includeIPCidrsKey, defaultRedirectIPCidr, validateCIDRListWithWildcard},
+		"excludeIPCidrs":                    {excludeIPCidrsKey, defaultRedirectExcludeIPCidr, validateCIDRList},
+		"includePorts":                      {includePortsKey, "", validatePortListWithWildcard},
+		"excludeInboundPorts":               {excludeInboundPortsKey, defaultRedirectExcludePort, validatePortList},
+		"includeOutboundPorts":              {includeOutboundPortsKey, defaultRedirectIncludePort, validatePortListWithWildcard},
+		"excludeOutboundPorts":              {excludeOutboundPortsKey, defaultRedirectExcludePort, validatePortList},
+		"kubevirtInterfaces":                {kubevirtInterfacesKey, defaultKubevirtInterfaces, alwaysValidFunc},
+		"disableRedirectionOnLocalLoopback": {disableRedirectionOnLocalLoopback, defaultNoLocalOutboundRedirectForProxy, validateBoolean},
 	}
 )
 
 // Redirect -- the istio-cni redirect object
 type Redirect struct {
-	targetPort                      string
-	redirectMode                    string
-	noRedirectUID                   string
-	includeIPCidrs                  string
-	includePorts                    string
-	excludeIPCidrs                  string
-	excludeInboundPorts             string
-	includeOutboundPorts            string
-	excludeOutboundPorts            string
-	kubevirtInterfaces              string
-	noLocalOutboundRedirectForProxy string
+	targetPort                        string
+	redirectMode                      string
+	noRedirectUID                     string
+	includeIPCidrs                    string
+	includePorts                      string
+	excludeIPCidrs                    string
+	excludeInboundPorts               string
+	includeOutboundPorts              string
+	excludeOutboundPorts              string
+	kubevirtInterfaces                string
+	disableRedirectionOnLocalLoopback string
 }
 
 type annotationValidationFunc func(value string) error
@@ -284,10 +284,10 @@ func NewRedirect(annotations map[string]string) (*Redirect, error) {
 			"excludeOutboundPorts", isFound, valErr)
 		return nil, valErr
 	}
-	isFound, redir.noLocalOutboundRedirectForProxy, valErr = getAnnotationOrDefault("noLocalOutboundRedirectForProxy", annotations)
+	isFound, redir.disableRedirectionOnLocalLoopback, valErr = getAnnotationOrDefault("disableRedirectionOnLocalLoopback", annotations)
 	if valErr != nil {
 		log.Errorf("Annotation value error for value %s; annotationFound = %t: %v",
-			"excludeOutboundPorts", isFound, valErr)
+			"disableRedirectionOnLocalLoopback", isFound, valErr)
 		return nil, valErr
 	}
 	// Add 15090 to sync with non-cni injection template
