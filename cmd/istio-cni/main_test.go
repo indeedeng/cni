@@ -471,7 +471,7 @@ func TestCmdAddWithKubevirtInterfaces(t *testing.T) {
 	}
 }
 
-func TestCmdAddWithNoLocalOutboundRedirectForProxy(t *testing.T) {
+func TestCmdAddDisableRedirectionOnLocalLoopback(t *testing.T) {
 	defer resetGlobalTestVariables()
 
 	testAnnotations[disableRedirectionOnLocalLoopback] = "true"

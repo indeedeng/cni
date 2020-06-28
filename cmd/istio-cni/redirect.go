@@ -31,6 +31,7 @@ const (
 	defaultProxyStatusPort                 = "15020"
 	defaultRedirectToPort                  = "15001"
 	defaultNoRedirectUID                   = "1337"
+	defaultNoRedirectGID                   = defaultNoRedirectUID
 	defaultRedirectMode                    = redirectModeREDIRECT
 	defaultRedirectIPCidr                  = "*"
 	defaultRedirectExcludeIPCidr           = ""
@@ -49,6 +50,7 @@ var (
 	// TODO: add this to the istio-api repo.
 	targetPortKey                     = "traffic.sidecar.istio.io/targetPort"
 	noRedirectUIDKey                  = "traffic.sidecar.istio.io/noRedirectUID"
+	noRedirectGIDKey                  = "traffic.sidecar.istio.io/noRedirectGID"
 	includeOutboundPortsKey           = "traffic.sidecar.istio.io/includeOutboundPorts"
 	disableRedirectionOnLocalLoopback = "traffic.sidecar.istio.io/disableRedirectionOnLocalLoopback"
 
@@ -60,6 +62,7 @@ var (
 	annotationRegistry = map[string]*annotationParam{
 		"targetPort":                        {targetPortKey, defaultRedirectToPort, validatePort},
 		"noRedirectUID":                     {noRedirectUIDKey, defaultNoRedirectUID, alwaysValidFunc},
+		"noRedirectGID":                     {noRedirectGIDKey, defaultNoRedirectGID, alwaysValidFunc},
 		"inject":                            {injectAnnotationKey, "", alwaysValidFunc},
 		"status":                            {sidecarStatusKey, "", alwaysValidFunc},
 		"redirectMode":                      {sidecarInterceptModeKey, defaultRedirectMode, validateInterceptionMode},
@@ -80,6 +83,7 @@ type Redirect struct {
 	targetPort                        string
 	redirectMode                      string
 	noRedirectUID                     string
+	noRedirectGID                     string
 	includeIPCidrs                    string
 	includePorts                      string
 	excludeIPCidrs                    string
@@ -242,6 +246,12 @@ func NewRedirect(annotations map[string]string) (*Redirect, error) {
 	if valErr != nil {
 		log.Errorf("Annotation value error for value %s; annotationFound = %t: %v",
 			"noRedirectUID", isFound, valErr)
+		return nil, valErr
+	}
+	isFound, redir.noRedirectGID, valErr = getAnnotationOrDefault("noRedirectGID", annotations)
+	if valErr != nil {
+		log.Errorf("Annotation value error for value %s; annotationFound = %t: %v",
+			"noRedirectGID", isFound, valErr)
 		return nil, valErr
 	}
 	isFound, redir.includeIPCidrs, valErr = getAnnotationOrDefault("includeIPCidrs", annotations)
